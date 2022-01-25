@@ -24,6 +24,14 @@ const mappedTileMatrixSet = []
 const minZoom = 0;
 const maxZoom = 20;
 
+const openStreetMapStartX = 17363;
+const openStreetMapStartY = 9533;
+
+const xTiles = 5;
+const yTiles = 5;
+
+
+
 const mapLayers = [
   "norgeskart_bakgrunn",
   "topo4graatone"
@@ -42,17 +50,25 @@ const wmtsService = mapLayers.map(layer => new Cesium.WebMapTileServiceImageryPr
   }
 }));
 
-openStreetMapDataSource.load("openmaptile.json", {clampToGround: true
-}).then(datasource => {
-  datasource.entities.values.forEach(entity => {
-    entity.polygon.extrudedHeight = entity.properties.height || 3;
-    entity.polygon.height = -2;
-    entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-    entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-  });
-});
+for(let y = openStreetMapStartY - Math.floor(yTiles/2); y < openStreetMapStartY + Math.floor(yTiles/2); y++){
+  for(let x = openStreetMapStartX - Math.floor(xTiles/2); x < openStreetMapStartX + Math.floor(xTiles/2); x++){
+    Cesium.GeoJsonDataSource.load(`https://data.osmbuildings.org/0.2/anonymous/tile/15/${x}/${y}.json`, {
+      fill: Cesium.Color.RED
+    }).then(datasource => {
+      if (!datasource) return;
+      datasource.entities.values.forEach(entity => {
+        entity.polygon.extrudedHeight = entity.properties.height || 3;
+        entity.polygon.height = -2;
+        entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+        entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+      });
+      dataSources.add(datasource);
+    });
+  }
+}
 
-dataSources.add(openStreetMapDataSource);
+
+// dataSources.add(openStreetMapDataSource);
 
 function App() {
   const [terrainHidesEntities, setTerrainHidesEntities] = useState(false);
@@ -121,7 +137,8 @@ function App() {
         <Globe
           depthTestAgainstTerrain={terrainHidesEntities}
         />
-        <Camera />
+        <Camera
+        />
 
         {entities.map((entity, index) => <Entity 
           position={entity.position}
