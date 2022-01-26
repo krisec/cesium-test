@@ -1,9 +1,10 @@
 import logo from './logo.svg';
 import './App.css';
-import { Viewer, Scene, Globe, Camera, Entity, ImageryLayer } from 'resium';
+import token from './accesstoken'
+import { Viewer, Scene, Globe, Camera, Entity, ImageryLayer, Cesium3DTileset } from 'resium';
 import * as Cesium from 'cesium';
 import { useState } from 'react';
-import { Button, Drawer, Menu, MenuItem, Select } from '@mui/material';
+import { Button, Checkbox, Drawer, Menu, MenuItem, Select } from '@mui/material';
 
 const pointGraphics = {
   pixelSize: 10,
@@ -14,9 +15,10 @@ const terrainProvider = new Cesium.CesiumTerrainProvider({
 });
 
 
-Cesium.Ion.defaultAccessToken =  "";
+Cesium.Ion.defaultAccessToken = token;
+const mappableDatasources  = [];
 
-const openStreetMapDataSource = new Cesium.GeoJsonDataSource("OpenStreetMap Datasource");
+// const openStreetMapDataSource = new Cesium.GeoJsonDataSource("OpenStreetMap Datasource");
 const dataSources = new Cesium.DataSourceCollection();
 
 const tileMatrixSetID = "EPSG:3857";
@@ -63,12 +65,17 @@ for(let y = openStreetMapStartY - Math.floor(yTiles/2); y < openStreetMapStartY 
         entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
       });
       dataSources.add(datasource);
+      mappableDatasources.push(datasource);
     });
   }
 }
 
-
+dataSources.add(Cesium.CzmlDataSource.load("akerselva_vannstand.czml")).then(datasource => {
+  mappableDatasources.push(datasource);
+});
 // dataSources.add(openStreetMapDataSource);
+
+const osmBuildingsURL = Cesium.IonResource.fromAssetId(96188);
 
 function App() {
   const [terrainHidesEntities, setTerrainHidesEntities] = useState(false);
@@ -126,10 +133,21 @@ function App() {
           <MenuItem value="topo4graatone">Topografisk Gråtone</MenuItem>
           <MenuItem value="norgeskart_bakgrunn">Norgeskart bakgrunn</MenuItem>
         </Select>
+        {mappableDatasources.map(source =>        
+        <Checkbox
+          checked={source.show}
+          label={source.name}
+          onClick={() => source.show = !source.show}
+        />)}
       </Drawer>
       <Viewer
         terrainProvider={terrainProvider}
         dataSources={dataSources}
+        style={{
+          width: "80%",
+          height:"100%",
+          marginLeft: "20%"
+      }}
         // imageryProvider={wmtsService}
         >
           {wmtsService.map(provider => <ImageryLayer imageryProvider={provider} key={provider._layer} show={mapLayer == provider._layer}/>)}
@@ -139,7 +157,7 @@ function App() {
         />
         <Camera
         />
-
+        <Cesium3DTileset url={osmBuildingsURL}/>
         {entities.map((entity, index) => <Entity 
           position={entity.position}
           point={pointGraphics}
