@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 window.CESIUM_BASE_URL = 'http://localhost:3000/cesium';
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App/>
   </React.StrictMode>,
   document.getElementById('root')
 );
