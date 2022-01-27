@@ -23,7 +23,7 @@ function App() {
           width: "20%",
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: drawerWidth,
+            width: "20%",
             boxSizing: 'border-box',
           },
         }}
