@@ -186,3 +186,5 @@ const osmBuildingsURL = Cesium.IonResource.fromAssetId(96188);
 in Viewer:
         <Cesium3DTileset url={osmBuildingsURL}/>
 
+Step 6 (optional):
+        <CameraFlyTo destination={Cesium.Cartesian3.fromDegrees(10.759415880187353, 59.90990667260775, 3000)}/>
