@@ -32,6 +32,9 @@ const tileMatrixSetID = "EPSG:3857";
 const mappedTileMatrixSet = []
 const minZoom = 0;
 const maxZoom = 20;
+for (let i = minZoom; i < maxZoom; i++) {
+  mappedTileMatrixSet.push(`${tileMatrixSetID}:${i}`);
+}
 
 const mapLayers = [
   "norgeskart_bakgrunn",
@@ -86,6 +89,7 @@ function App() {
     }
     setOpenStreetMapLinks(osmElements);
   }, [])
+  
   let drawerWidth = "20%";
   const startPos = {
     lat: 59.5,
@@ -107,9 +111,7 @@ function App() {
   }
 
 
-  for (let i = minZoom; i < maxZoom; i++) {
-    mappedTileMatrixSet.push(`${tileMatrixSetID}:${i}`);
-  }
+
   //https://gatekeeper3.geonorge.no/BaatGatekeeper/gk/gk.cache_wmts?gkt=528D93C726F7BF89D8DF67463E5ABE168F9EFFF130B0C1AB8DF829231A08590A7DF62C67F6239A932DAF24FAC0401415E0DFA1CAF0063D3D8D018F0853CD0DA1&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=topo4graatone&STYLE=default&FORMAT=image/png&TILEMATRIXSET=EPSG:25833&TILEMATRIX=EPSG:25833:5&TILEROW=10&TILECOL=14
 
 

@@ -57,7 +57,11 @@ Constants outside render function:
 const tileMatrixSetID = "EPSG:3857";
 const mappedTileMatrixSet = []
 const minZoom = 0;
-const maxZoom = 20;
+const maxZoom = 18;
+
+for (let i = minZoom; i < maxZoom; i++) {
+  mappedTileMatrixSet.push(`${tileMatrixSetID}:${i}`);
+}
 
 const mapLayers = [
   "norgeskart_bakgrunn",
@@ -71,9 +75,114 @@ const wmtsService = mapLayers.map(layer => new Cesium.WebMapTileServiceImageryPr
   style: "default",
   tileMatrixLabels: mappedTileMatrixSet,
   format:"image/png",
-  maximumLevel:18,
+  maximumLevel:maxZoom,
   parameters: {
     version: "1.0.0",
   }
 }));
+
+States:
+  const [mapLayer, setMapLayer] = useState("topo4graatone");
+
+  const selectLayer = (event) => {
+    setMapLayer(event.target.value);
+  }
+In Drawer:
+        <Select onChange={selectLayer} value={mapLayer}>
+          <MenuItem value="topo4graatone">Topografisk Gråtone</MenuItem>
+          <MenuItem value="norgeskart_bakgrunn">Norgeskart bakgrunn</MenuItem>
+        </Select>
+
+
+In Viewer component:
+          {wmtsService.map(provider => <ImageryLayer imageryProvider={provider} key={provider._layer} show={mapLayer == provider._layer}/>)}
+
+Step 3:
+Constants:
+
+
+const openStreetMapStartX = 17363;
+const openStreetMapStartY = 9533;
+
+const xTiles = 5;
+const yTiles = 5;
+
+State:
+  const [openStreetMapLinks, setOpenStreetMapLinks] = useState([]);
+
+  const geoJsonPromise = (datasource) => {
+    if (!datasource) return;
+    datasource.entities.values.forEach(entity => {
+      entity.polygon.extrudedHeight = entity.properties.height || 3;
+      entity.polygon.height = -2;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+      entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+    });
+    // dataSources.add(datasource);
+  }
+
+  useEffect(() => {
+    let osmElements = [];
+    for(let y = openStreetMapStartY - Math.floor(yTiles/2); y < openStreetMapStartY + Math.floor(yTiles/2); y++){
+      for(let x = openStreetMapStartX - Math.floor(xTiles/2); x < openStreetMapStartX + Math.floor(xTiles/2); x++){
+        osmElements.push({link: `https://data.osmbuildings.org/0.2/anonymous/tile/15/${x}/${y}.json`, show: true, name: `OSM ${x}, ${y}`});
+      }
+    }
+    setOpenStreetMapLinks(osmElements);
+  }, [])
+
+  In Drawer
+  
+        <FormGroup>
+        <FormControlLabel
+          label="All OpenStreetMaps"
+          control={
+            <Checkbox
+              checked={openStreetMapLinks.every(el => el.show)}
+              indeterminate={openStreetMapLinks.some(el => el.show) && !openStreetMapLinks.every(el => el.show)}
+              onChange={() => {
+                if (openStreetMapLinks.some(el => el.show)) {
+                  setOpenStreetMapLinks(openStreetMapLinks.map(el => ({...el, show: false})));
+                } else {
+                  setOpenStreetMapLinks(openStreetMapLinks.map(el => ({...el, show: true})));
+                }
+              }}
+            />
+          }
+        />
+        {openStreetMapLinks.map(source => <FormControlLabel
+        onClick={() => setOpenStreetMapLinks(openStreetMapLinks.map(el => el.name === source.name ? {...el, show: !el.show} : el))}
+        label={source.name}
+        control={<Checkbox
+        checked={source.show}
+        key={source.link}
+        />}
+        />)}
+        </FormGroup>
+
+In Viewer:
+        {openStreetMapLinks.map(OSM => <GeoJsonDataSource data={OSM.link} onLoad={geoJsonPromise} show={OSM.show} key={OSM.name}/>)}
+
+Step 4:
+State:
+  const [czml, setCzml] = useState({link: "akerselva_vannstand.czml", show: true});
+
+In Drawer:
+        <FormControlLabel
+        label="Akerselva CZML"
+        onClick={() => setCzml({...czml, show: !czml.show})}
+        control={<Checkbox 
+          checked={czml.show}
+          />}
+        />
+
+In Viewer:
+        <CzmlDataSource data={czml.link} show={czml.show} />
+
+Step 5:
+Constant:
+const osmBuildingsURL = Cesium.IonResource.fromAssetId(96188);
+
+in Viewer:
+        <Cesium3DTileset url={osmBuildingsURL}/>
 
